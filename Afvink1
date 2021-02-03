@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Code werkt alleen op windows bash!!!
-# Gebruikte IntelliJ plugin op windows = bashsupport
+# Gebruikte IntelliJ plugin op windows = bashsupportpro (1 month trial)
 
 # Bestanden aan variabelen meegeven
 FILE1=variant_summary.txt.gz.md5
