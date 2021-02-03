@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Code werkt alleen op windows bash!!!
+# Gebruikte IntelliJ plugin op windows = bashsupport
+
+# Bestanden aan variabelen meegeven
+FILE1=variant_summary.txt.gz.md5
+FILE2=variant_summary.txt.gz
+
+# Kijkt of het md5 bestand bestaat, zo ja dan word deze verwijderd.
+rm variant_summary.txt.gz.md5
+# Download nieuwste versie van md5 bestand
+echo "Downloaden nieuwe MD5 bestand..."; wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz.md5 &> /dev/null
+
+
+read -r firstline<$FILE1
+IFS=' '
+read -a stringsplit <<< "$firstline"
+md5=${stringsplit[0]}
+
+# Vragen of je gz wilt updaten:
+echo "Wil je de bestanden updaten? Ja of nee?"
+read update
+
+if [ "$update" = "nee" ]; then
+  if  [ -f "$FILE2" ]; then
+    gzmd5regel=$(md5sum variant_summary.txt.gz)
+    read -a stringsplit <<< "$gzmd5regel"
+    gzmd5=${stringsplit[0]}
+    x=0
+    while [ $x = 0 ]
+    do
+      if [ $md5 = $gzmd5 ]; then
+        x=1
+        echo "MD5 Klopt."
+      else
+        rm variant_summary.txt.gz
+        echo "MD5 van bestaand bestand onjuist."
+        echo "Downloaden nieuwe GZ bestand..."; wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz &> /dev/null
+        gzmd5regel=$(md5sum variant_summary.txt.gz)
+        read -a stringsplit <<< "$gzmd5regel"
+        gzmd5=${stringsplit[0]}
+      fi
+    done
+
+  else
+    echo ".gz bestand is niet gevonden, nieuwe downloaden..."
+    echo "Downloaden nieuwe GZ bestand."; wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz &> /dev/null
+    gzmd5regel=$(md5sum variant_summary.txt.gz)
+    read -a stringsplit <<< "$gzmd5regel"
+    gzmd5=${stringsplit[0]}
+  fi
+
+
+else # Als je wilt updaten
+  rm variant_summary.txt.gz &> /dev/null
+  echo "Downloaden nieuwe GZ bestand..."; wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz &> /dev/null
+  gzmd5regel=$(md5sum variant_summary.txt.gz)
+  read -a stringsplit <<< "$gzmd5regel"
+  gzmd5=${stringsplit[0]}
+  x=0
+  while [ $x = 0 ]
+  do
+    if [ $md5 = $gzmd5 ]; then
+      echo "MD5 klopt van nieuw gedownloade bestand."
+      x=1
+    else
+      wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz
+      gzmd5regel=$(md5sum variant_summary.txt.gz)
+      read -a stringsplit <<< "$gzmd5regel"
+      gzmd5=${stringsplit[0]}
+    fi
+  done
+fi
+
+echo "MD5 bestand: $md5"
+echo "GZ bestand:  $gzmd5"
+echo "Klaar met runnen."
